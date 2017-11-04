@@ -6,10 +6,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": "https://github.com/cguilhermef/simple-mock-server.git",
   "author": "Christian Guilherme Fritsch",
   "license": "MIT",
   "dependencies": {
     "express": "^4.16.2",
+    "moment": "^2.19.1",
     "uuid": "^3.1.0"
   }
 }
