@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const app = express();
 const uuid = require('uuid/v4');
 const moment = require('moment');
+const _ = require('lodash');
 
 const sessions = [];
 
@@ -130,8 +131,8 @@ app.post('/login', (req, res, next) => {
     token: sessionId,
     email: email,
     users: JSON.parse(JSON.stringify(users)),
-    styles: JSON.parse(JSON.stringify(users)),
-    brands: JSON.parse(JSON.stringify(users))
+    styles: JSON.parse(JSON.stringify(styles)),
+    brands: JSON.parse(JSON.stringify(brands))
   })
   res.status(200).send({
     token: sessionId
@@ -197,7 +198,20 @@ app.post('/users', (req, res, next) => {
       return;
     }
     user.id = session.users[session.users.length - 1].id + 1;
-    session.users.push(user);
+    session.users.push(
+      _.pick(
+        user,
+        [
+          'id',
+          'name',
+          'email',
+          'document',
+          'birthday',
+          'password',
+          'brands',
+          'styles'
+        ]
+    ));
     res.status(201).json(user);
   });
 });
@@ -223,7 +237,18 @@ app.put('/users/:id', (req, res, next) => {
       });
       return;
     }
-    session.users[oldUserIndex] = newUser;
+    Object.assign(session.users[oldUserIndex],_
+      .pick(
+        newUser,
+        [
+          'name',
+          'email',
+          'document',
+          'birthday',
+          'brands',
+          'styles'
+        ]
+    ));
     res.status(200).json(session.users[oldUserIndex]);
   }, true);
 });
@@ -291,7 +316,9 @@ const users = [{
     email: 'joaocarlos@mail.com',
     birthday: '1983-10-17',
     document: '07892151605',
-    password: 'joao1234'
+    password: 'joao1234',
+    brands: [],
+    styles: []
   },
   {
     id: 21355,
@@ -299,7 +326,9 @@ const users = [{
     email: 'mariadagraca@mail.com',
     birthday: '1987-08-12',
     document: '54733982356',
-    password: 'maria1234'
+    password: 'maria1234',
+    brands: [],
+    styles: []
   },
   {
     id: 21356,
@@ -307,7 +336,9 @@ const users = [{
     email: 'josest@mail.com',
     birthday: '1962-04-20',
     document: '08657177536',
-    password: 'jose1234'
+    password: 'jose1234',
+    brands: [],
+    styles: []
   }
 ];
 
