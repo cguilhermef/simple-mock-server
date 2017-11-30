@@ -98,6 +98,10 @@ const isValid = (user, callback, notValidatePassword) => {
   }
 }
 
+app.get('/health', (req, res) => {
+  res.status(200).send({ 'message': 'Its working!'});
+});
+
 app.post('/login', (req, res, next) => {
   const {
     email,
