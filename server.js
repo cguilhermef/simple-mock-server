@@ -13,7 +13,8 @@ app.use(bodyParser.urlencoded({
 })); // for parsing application/x-www-form-urlencoded
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, Authorization,  X-Requested-With, Content-Type, Accept");
+  res.header("Access-Control-Allow-Headers", "Origin, Authorization, X-Requested-With, Content-Type, Accept");
+  res.header("Access-Control-Allow-Methods", "PUT, POST, GET, OPTIONS");
   next();
 });
 
@@ -96,6 +97,10 @@ const isValid = (user, callback, notValidatePassword) => {
     callback(errors);
   }
 }
+
+app.get('/health', (req, res) => {
+  res.status(200).send({ 'message': 'Its working!'});
+});
 
 app.post('/login', (req, res, next) => {
   const {
