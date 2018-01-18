@@ -1,14 +1,16 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const bearerToken = require('express-bearer-token');
 const app = express();
 const uuid = require('uuid/v4');
 const moment = require('moment');
 const _ = require('lodash');
 const sha1 = require('sha1');
-
+const crypto = require('crypto');
 const rooms = {};
 
 app.use(bodyParser.json()); // for parsing application/json
+app.use(bearerToken());
 app.use(bodyParser.urlencoded({
   extended: true
 })); // for parsing application/x-www-form-urlencoded
@@ -46,13 +48,14 @@ app.post('/start', (req, res, next) => {
     data: {
       hash,
       token: sha1(secret),
-      messages: rooms[hash].messages
+      messages: decryptMessages(room, secretHash)
     }
   });
 });
 
 app.get('/messages-of/:hash', (req, res, next) => {
   const hash = req.params.hash;
+  const token = req.token;
   if (!hash) {
     res.status(403).json({
       'error': 'Chat must be specified!'
@@ -67,7 +70,7 @@ app.get('/messages-of/:hash', (req, res, next) => {
   }
   res.status(200).json({
     data: {
-      messages: rooms[hash].messages
+      messages: decryptMessages(rooms[hash], token)
     }
   });
 });
@@ -130,7 +133,7 @@ const createRoom = (hash, secret) => {
     rooms[hash] = {
       hash,
       users: [sha1(secret)],
-      messages: []
+      messages: {}
     };
   }
   return rooms[hash];
@@ -147,8 +150,42 @@ const createMessage = (hash, token, message, callback) => {
     callback(true);
     return;
   }
-  room.messages.push({ token, message });
-  callback(null, room.messages);
+  room.users.forEach( u => {
+    if (!room.messages.hasOwnProperty(u)) {
+      room.messages[u] = [];
+    }
+    room.messages[u].push({
+      token: u,
+      message: encryptMessage(u, message)
+    });
+  })
+  callback(null, decryptMessages(room, user));
+}
+
+const decryptMessage = (token, message) => {
+  console.log('->-', token, message);
+  const decipher = crypto.createDecipher('aes192', token);
+  let decripted = decipher.update(message, 'hex', 'utf8');
+  decripted += decipher.final('utf8');
+  return decripted;
+}
+
+const encryptMessage = (token, message) => {
+  const cipher = crypto.createCipher('aes192', token);
+  let encripted = cipher.update(message, 'utf8', 'hex');
+  encripted += cipher.final('hex');
+  return encripted;
+}
+
+const decryptMessages = (room, user) => {
+  if (!room.messages.hasOwnProperty(user)) {
+    return [];
+  }
+  const messages = JSON.parse(JSON.stringify(room.messages[user]));
+  return messages.map( m => {
+    m.message = decryptMessage(user, m.message);
+    return m;
+  });
 }
 
 app.listen(4000, function () {
