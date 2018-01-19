@@ -89,7 +89,8 @@ app.post('/messages-of/:hash', (req, res, next) => {
     });
     return;
   }
-  const { token, message } = req.body;
+  const { message } = req.body;
+  const token = req.token;
   if (!token || !message) {
     res.status(422).json({
       'error': 'Token or message was missed'
@@ -155,15 +156,15 @@ const createMessage = (hash, token, message, callback) => {
       room.messages[u] = [];
     }
     room.messages[u].push({
-      token: u,
-      message: encryptMessage(u, message)
+      message: encryptMessage(u, message),
+      timestamp: new Date().getTime(),
+      token: u
     });
   })
   callback(null, decryptMessages(room, user));
 }
 
 const decryptMessage = (token, message) => {
-  console.log('->-', token, message);
   const decipher = crypto.createDecipher('aes192', token);
   let decripted = decipher.update(message, 'hex', 'utf8');
   decripted += decipher.final('utf8');
