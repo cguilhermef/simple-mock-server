@@ -158,7 +158,7 @@ const createMessage = (hash, token, message, callback) => {
     room.messages[u].push({
       message: encryptMessage(u, message),
       timestamp: new Date().getTime(),
-      token: u
+      token: token
     });
   })
   callback(null, decryptMessages(room, user));
